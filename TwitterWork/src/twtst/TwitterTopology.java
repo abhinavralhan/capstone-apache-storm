@@ -1,7 +1,7 @@
 package twtst;
 
 import org.apache.storm.Config;
-
+import org.apache.storm.LocalCluster;
 import org.apache.storm.StormSubmitter;
 import org.apache.storm.generated.AlreadyAliveException;
 import org.apache.storm.generated.AuthorizationException;
@@ -14,31 +14,32 @@ import twtst.TwitterSpout;
 
 public class TwitterTopology {
 
+	/* Driver Method to get started */
 	public static void main(String args[])
 	{
+		//Topology Builder object to start building a Topology
 		TopologyBuilder builder = new TopologyBuilder();
-		builder.setSpout("TweetSpout", new TwitterSpout(),3);
+		builder.setSpout("TweetSpout", new TwitterSpout());
+		
+		
+		//Create a Mongo Insert Bolt
 		String url = "mongodb://127.0.0.1:27017/Twitter";
 		String collectionName = "tweets";
 		MongoMapper mapper = new SimpleMongoMapper()
-		        .withFields("Text","id");
+		        .withFields("Text","Time","User","Country","Retweets","Favourites","Followers","Quoted","Hashtags");
 		MongoInsertBolt insertBolt = new MongoInsertBolt(url, collectionName, mapper);
-		builder.setBolt("Mongo-Write", insertBolt,8).shuffleGrouping("TweetSpout");
+		
+		
+		//add mongo insert bolt to topology
+		builder.setBolt("Mongo-Write", insertBolt).shuffleGrouping("TweetSpout");
 		Config conf = new Config();
-		conf.setDebug(false);
-		conf.setNumWorkers(3);;
-		try {
-			StormSubmitter.submitTopologyWithProgressBar("Twitter", conf, builder.createTopology());
-		} catch (AlreadyAliveException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidTopologyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (AuthorizationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
+	
+		//Submit the topology to the cluster	
+		LocalCluster cluster = new LocalCluster();
+		cluster.submitTopology("Twitter", conf , builder.createTopology());
+			
 	}
+	
 	
 }

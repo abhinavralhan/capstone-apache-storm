@@ -1,6 +1,8 @@
 package twtst;
 
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -15,7 +17,10 @@ import org.apache.storm.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.mongodb.BasicDBObject;
+
 import twitter4j.FilterQuery;
+import twitter4j.HashtagEntity;
 import twitter4j.StallWarning;
 import twitter4j.Status;
 import twitter4j.StatusDeletionNotice;
@@ -32,21 +37,52 @@ public final class TwitterSpout extends BaseRichSpout{
 	
 	private LinkedBlockingQueue<Status> queue;
 	private TwitterStream twitterStream;
-	private SpoutOutputCollector op;
+	private SpoutOutputCollector collector;
+
 	
-	@Override
+	/* Fill This method with computation that needs to be performed */
 	public void nextTuple() {
-		// TODO Auto-generated method stub
+		
+		int followers=0;
+		String  quoted ="", username="" ,country="";
+		List<String> hashtags = new ArrayList<String>();
+		BasicDBObject doc = new BasicDBObject(); 
 		
 		Status status = queue.poll();
 		if(status == null)
 		{
-			Utils.sleep(500);
+			//sleep if no tweet found to minimize waste of resources
+			Utils.sleep(500); 
 		}
 		else
 		{
-			this.op.emit(new Values(status.getText() , status.getId()));
+			if(status.getUser()!=null)
+				{
+					followers = status.getUser().getFollowersCount();
+					username  = status.getUser().getScreenName();
+				}
+			
+			if(status.getQuotedStatus()!=null)
+				quoted = status.getQuotedStatus().getText();
+
+			if(status.getHashtagEntities()!=null)
+				{
+					HashtagEntity hash[] = status.getHashtagEntities();
+					for(int i=0;i<hash.length;i++)
+						hashtags.add(hash[i].getText());
+					doc.append("tags", hashtags);				
+				}
+			if(status.getPlace()!=null)
+				country = status.getPlace().getCountry();
+			
+			this.collector.emit(new Values(status.getText() , status.getCreatedAt() 
+					, username , country
+					, status.getRetweetCount() , status.getFavoriteCount()
+					, followers, quoted
+					,  doc
+					));
 			log.error(status.toString());
+			
 		}
 		
 	}
@@ -57,74 +93,78 @@ public final class TwitterSpout extends BaseRichSpout{
 		this.twitterStream.cleanUp();
 		this.twitterStream.shutdown();
 	}
-
+	
+	/* code that needs to be executed once before we start streaming */
 	@Override
-	public void open(Map arg0, TopologyContext arg1, SpoutOutputCollector arg2){
-		// TODO Auto-generated method stub
+	public void open(Map map, TopologyContext context, SpoutOutputCollector collector){
+
+		
+		
 		this.queue = new LinkedBlockingQueue<>(1000); 
-		this.op = arg2;
+		this.collector = collector;
 		
 		final StatusListener statusListener = new StatusListener() {
 
 			@Override
 			public void onException(Exception arg0) {
-				// TODO Auto-generated method stub
 				
 			}
 
 			@Override
 			public void onDeletionNotice(StatusDeletionNotice arg0) {
-				// TODO Auto-generated method stub
 				
 			}
 
 			@Override
 			public void onScrubGeo(long arg0, long arg1) {
-				// TODO Auto-generated method stub
 				
 			}
 
 			@Override
 			public void onStallWarning(StallWarning arg0) {
-				// TODO Auto-generated method stub
 				
 			}
 
 			@Override
 			public void onStatus(final Status arg0) {
-				// TODO Auto-generated method stub
 				
+				//offer tweet on availability
 				queue.offer(arg0);
 				
 			}
 
 			@Override
 			public void onTrackLimitationNotice(int arg0) {
-				// TODO Auto-generated method stub
-				
+								
 			}};
 			
+			//create a configuration with O-Auth credentials
 			final ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
 			configurationBuilder.setIncludeEntitiesEnabled(true);
-			configurationBuilder.setOAuthAccessToken("98341825-qv8wF5hwRCGRrTpzxP7fes4nJ1g9rjHFyBuHOzFbu");
-			configurationBuilder.setOAuthAccessTokenSecret("WW5SQKeJxuqdNr3vJ8ybNCPAYqOiCHDz2XLhMtnszVzNj");
-			configurationBuilder.setOAuthConsumerKey("PdAKVXyxZAlzHQkH62RhgkuBY");
-			configurationBuilder.setOAuthConsumerSecret("P0qJdJmzclI6otwiApVee7UcjWl4GcZa8GkGWHoV4IdOyjsfM1");
+			configurationBuilder.setOAuthAccessToken("98341825-CLmXalWa10Yvt9hoTDW4yyylW6JXcTZLOyeaVyV91");
+			configurationBuilder.setOAuthAccessTokenSecret("kfu7TVVB7pZBFx4F6WoXpMQG2ZRsnErGUVm5FgpH1q1iT");
+			configurationBuilder.setOAuthConsumerKey("aNQTYWdH9XujXDArVhl50M2Dm");
+			configurationBuilder.setOAuthConsumerSecret("YfNLjaX0BW1yCmdsnKkCt87ftUL5rgjhOPlM0zxYP23qCzGK1h");
+			
+			//generate a stream instance with interface we created
 			this.twitterStream = new TwitterStreamFactory(configurationBuilder.build()).getInstance(); 
 			this.twitterStream.addListener(statusListener);
 			
+			//filter tweets from all over the world , will not work without at least one bounding box
+			double[][] bb= {{-180, -90}, {180, 90}}; 
 			final FilterQuery filterQuery = new FilterQuery(); 
-			final double[][] boundingBoxOfUS = {{-124.848974, 24.396308},
-                    {-66.885444, 49.384358}};
-			filterQuery.locations(boundingBoxOfUS);
+			filterQuery.language(new String[]{"en"});
+			filterQuery.locations(bb);
 			this.twitterStream.filter(filterQuery);
 		
 	}
 
+	/* declare fields that the spout will be producing */
 	@Override
-	public void declareOutputFields(OutputFieldsDeclarer arg0) {
+	public void declareOutputFields(OutputFieldsDeclarer declarer) {
+		
 		// TODO Auto-generated method stub
-		arg0.declare(new Fields("Text","id"));
+		declarer.declare(new Fields("Text","Time","User","Country","Retweets","Favourites","Followers","Quoted","Hashtags"));
 	}
 
 }
