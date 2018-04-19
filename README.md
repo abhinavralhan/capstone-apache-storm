@@ -1,6 +1,12 @@
 # capstone-apache-storm
 
+Download repo
+
+> git clone https://github.com/abhinavralhan/capstone-apache-storm/
+
 To create a jar with Dependencies for storm to execute :
+
+> mvn clean install
 
 >  mvn assembly:assembly -DdescriptorId=jar-with-dependencies
 
