@@ -1,4 +1,7 @@
 twtst/TwitterTopology.class
 twtst/TwitterSpout.class
+twtst/SplitterBolt.class
 twtst/TwitterSpout$1.class
+twtst/SentiBolt.class
 test/openNLPCategorizer.class
+twtst/CounterBolt.class

@@ -75,13 +75,11 @@ public final class TwitterSpout extends BaseRichSpout{
 			if(status.getPlace()!=null)
 				country = status.getPlace().getCountry();
 			
-			this.collector.emit(new Values(status.getText() , status.getCreatedAt() 
+			this.collector.emit("Tweets",new Values(status.getText() , status.getCreatedAt().toString() 
 					, username , country
-					, status.getRetweetCount() , status.getFavoriteCount()
 					, followers, quoted
 					,  doc
 					));
-			log.error(status.toString());
 			
 		}
 		
@@ -164,7 +162,7 @@ public final class TwitterSpout extends BaseRichSpout{
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		
 		// TODO Auto-generated method stub
-		declarer.declare(new Fields("Text","Time","User","Country","Retweets","Favourites","Followers","Quoted","Hashtags"));
+		declarer.declareStream("Tweets",new Fields("Text","Time","User","Country","Followers","Quoted","Hashtags"));
 	}
 
 }

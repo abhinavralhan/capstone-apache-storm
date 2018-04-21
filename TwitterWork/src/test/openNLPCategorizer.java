@@ -1,9 +1,16 @@
 package test;
  
-import java.io.FileInputStream;
+
 import java.io.IOException;
 import java.io.InputStream;
- 
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import org.apache.storm.shade.org.apache.commons.io.IOUtils;
+
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
+
 import opennlp.tools.doccat.DoccatModel;
 import opennlp.tools.doccat.DocumentCategorizerME;
 import opennlp.tools.doccat.DocumentSampleStream;
@@ -13,21 +20,24 @@ import opennlp.tools.util.PlainTextByLineStream;
 public class openNLPCategorizer {
 	DoccatModel model;
  
-	public static void main(String[] args) {
-		openNLPCategorizer twitterCategorizer = new openNLPCategorizer();
-		twitterCategorizer.trainModel();
-		twitterCategorizer.classifyNewTweet("Im not having a bad day. Im having a good day");
+	public static void main(String args[]) 
+	{
+		openNLPCategorizer cat = new openNLPCategorizer();
+		//cat.trainModel();
+		System.out.println(cat.classifyNewTweet("I hate coffee"));
 	}
- 
-	public void trainModel() {
+	
+	@SuppressWarnings("deprecation")
+	public void trainModel(URL url) {
 		InputStream dataIn = null;
 		try {
-			dataIn = new FileInputStream("input/tweets.txt");
+
+			dataIn = IOUtils.toInputStream(Resources.toString(url, Charsets.UTF_8));
 			ObjectStream lineStream = new PlainTextByLineStream(dataIn, "UTF-8");
 			ObjectStream sampleStream = new DocumentSampleStream(lineStream);
 			// Specifies the minimum number of times a feature must be seen
 			int cutoff = 2;
-			int trainingIterations = 3000;
+			int trainingIterations = 1000;
 			model = DocumentCategorizerME.train("en", sampleStream, cutoff,
 					trainingIterations);
 		} catch (IOException e) {
@@ -43,18 +53,15 @@ public class openNLPCategorizer {
 		}
 	}
  
-	public void classifyNewTweet(String tweet) {
+	public int classifyNewTweet(String tweet) {
 		DocumentCategorizerME myCategorizer = new DocumentCategorizerME(model);
 		double[] outcomes = myCategorizer.categorize(tweet);
 		String category = myCategorizer.getBestCategory(outcomes);
- 
-		if (category.equalsIgnoreCase("4")) {
-			System.out.println("The tweet is positive :) ");
-		} else if (category.equalsIgnoreCase("2")){
-			System.out.println("The tweet is neutral :| ");
+		if (category.equalsIgnoreCase("1")) {
+			return 1;
 		}
 		else {
-			System.out.println("The tweet is negative :( ");
+			return 0;
 		}
 	}
 }
