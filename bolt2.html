@@ -1,0 +1,762 @@
+{% extends 'layout.html' %}
+
+<!-- 
+{%- block js -%}
+{{ super() }}
+<script type="text/javascript" src="{{ static('realTimeChartMulti.js') }}"></script>
+{%- endblock -%} -->
+
+{% block body %}
+
+<!-- <meta http-equiv="refresh" content="10" />
+ -->
+<!-- 
+<div class="container">
+  <h2> <br>  <br> Sentiment Analysis</h2>
+  <p><br><br>Sentiment analysis, also known as opinion mining is the process of determining the emotional tone behind a series of words, used to gain an understanding of the the attitudes, opinions and emotions expressed within an online mention.</p>
+  <div class="table-responsive">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Bad</th>
+        <th>Neutral</th>
+        <th>Good</th>
+      </tr>
+    </thead>
+  </table> -->
+  <br><br><br>
+  {{ json_projects }}
+<!--  <div class="col-sm-6">
+    <div class="chart-wrapper">
+        <div class="chart-title">
+            Word Count
+        </div>
+        <div class="chart-stage">
+            <div id="resource-type-row-chart"></div>
+        </div>
+    </div>
+</div> -->
+<div align="center">
+	<svg align="center" height="960" width="600"></svg>
+</div>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+
+<script type="text/javascript">
+	var circleWidth = 5;
+
+	var fontFamily = 'Bree Serif',
+	    fontSizeHighlight = '1.5em',
+	    fontSizeNormal = '1em';
+
+	var palette = {
+	      "lightgray": "#819090",
+	      "gray": "#708284",
+	      "mediumgray": "#536870",
+	      "darkgray": "#475B62",
+
+	      "darkblue": "#0A2933",
+	      "darkerblue": "#042029",
+
+	      "paleryellow": "#FCF4DC",
+	      "paleyellow": "#EAE3CB",
+	      "yellow": "#A57706",
+	      "orange": "#BD3613",
+	      "red": "#D11C24",
+	      "pink": "#C61C6F",
+	      "purple": "#595AB7",
+	      "blue": "#2176C7",
+	      "green": "#259286",
+	      "yellowgreen": "#738A05"
+	  }
+</script>
+
+<script>
+/*   var nodes = [
+  { id: "mammal", level: 1, group:1 },
+  { id: "dog"   , level: 2, group:1 },
+  { id: "cat"   , level: 3, group:1  },
+  { id: "fox"   , level: 4, group:2  },
+  { id: "elk"   , level: 5, group:2  },
+  { id: "insect", level: 6, group:2  },
+  { id: "ant"   , level: 7, group:3  },
+  { id: "bee"   , level: 8, group:3  },
+  { id: "fish"  , level: 9, group:3  },
+  { id: "carp"  , level: 10, group:1  },
+  { id: "pike"  , level: 11, group:2  }
+]*/
+
+
+
+	queue()
+    .defer(d3.json, "add2")
+    .await(makeGraphs);
+
+    function makeGraphs(error, projectsJson) {
+
+    data = projectsJson;   
+    ndx = crossfilter(data);
+
+    var resourceTypeDim = ndx.dimension(function (d) {
+        return d["word"];
+    });
+
+	var numProjectByResourceType = resourceTypeDim.group();
+
+	console.log(data)
+
+	    w = 1000,
+	    h =  800,
+	    circleWidth = 10; 
+		 
+
+		var palette = {
+		      "lightgray": "#E5E8E8",
+		      "gray": "#708284",
+		      "mediumgray": "#536870",
+		      "blue": "#3B757F"
+		  };
+
+		var colors = d3.scale.category20();
+
+		var nodes = [
+		      { name: "Actif", value: 40 },
+		      { name: "Passif", value: 40 },  
+		      { name: "Capitaux Propres", value: 40 },
+		      { name: "Produits", value: 40 }, 
+		      { name: "Charges", value: 40 }, 
+		      { name: "Rapport impôt", value: 40 },
+
+		];
+
+
+
+		var myChart = d3.select('body')
+		      .append("div")
+		        .classed("svg-container", true)
+		      
+		      .append('svg')
+		        .attr("preserveAspectRatio", "xMinYMin meet")
+		        .attr("viewBox", "0 0 1000 800")
+		        .classed("svg-content-responsive", true)
+
+
+		var force = d3.layout.force()
+		      .nodes(nodes)
+		      .gravity(0.05)
+		      .charge(-1000)
+		      .size([w,h]); 
+
+
+		      var node =  myChart.selectAll('circle')  
+		            .data(nodes).enter() 
+		            .append('g') 
+		            .call(force.drag); 
+
+		     
+		     node.append('circle')
+		            .attr('cx', function(d){return d.x; })
+		            .attr('cy', function(d){return d.y; })
+		            .attr('r', function(d,i){
+		                  console.log(d.value);
+		                  if ( i > 0 ) {
+		                        return circleWidth + d.value; 
+		                  } else {
+		                        return circleWidth + 35; 
+		                  }
+		            })
+		            .attr('fill', function(d,i){
+		                  if ( i > 0 ) {
+		                        return colors(i);
+		                  } else {
+		                        return '#fff';
+		                  }
+		            })
+		            .attr('strokewidth', function(d,i){
+		                  if ( i > 0 ) {
+		                        return '0';
+		                  } else {
+		                        return '2';
+		                  }
+		            })
+		            .attr('stroke', function(d,i){
+		                  if ( i > 0 ) {
+		                        return 'black';
+		                  } else {
+		                        return 'black';
+		                  }
+		            });
+
+
+		      force.on('tick', function(e){ 
+		            node.attr('transform', function(d, i){
+		              return 'translate(' + d.x + ','+ d.y + ')'
+		            })
+
+		      });
+
+
+		      node.append('text')
+		            .text(function(d){ return d.name; })
+		            .attr('font-family', 'Raleway', 'Helvetica Neue, Helvetica')
+		            .attr('fill', function(d, i){
+		              console.log(d.value);
+		                  if ( i > 0 && d.value < 10 ) {
+		                        return palette.mediumgray;
+		                  } else if ( i > 0 && d.value >10 ) {
+		                        return palette.lightgray;
+		                  } else {
+		                        return palette.blue;
+		                  }
+		            })
+		            .attr('text-anchor', function(d, i) {
+		                  return 'middle';
+		            })
+		            .attr('font-size', function(d, i){
+		                  if (i > 0) {
+		                        return '.8em';
+		                  } else {
+		                        return '.9em';    
+		                  }
+		            }) 
+
+		force.start();
+}
+
+/*
+	var width = window.innerWidth
+	var height = window.innerHeight
+
+	var svg = d3.select('body')
+	.append('svg')
+	.attr("width", "100%")
+     .attr("height", "100%")
+      .append("g")*/
+	//svg.attr('width', width).attr('height', height)
+
+/*	var simulation = d3
+	  .forceSimulation()
+	  //.force('charge', d3.forceManyBody().strength(-120))
+	  .force('center', d3.forceCenter(width / 2, height / 2))
+	  .force('collision', d3.forceCollide().radius(function(data) {
+    		return data.count
+	  }))
+
+	function getNodeColor(data) {
+	  //return data.count > 100 ? 'red' : 'blue'
+	  return data.count > 50 ? 'red' : 'blue'
+	}
+
+	function getNodeSize(data) {
+
+		x = data.count / 5
+		if(data.count < 2)
+			x = 15
+		return x
+	}
+
+	var nodeElements = svg.append("g")
+	  .attr("class", "data")
+	  .selectAll("circle")
+	  .data(data)
+	  .enter().append("circle")
+	    .attr("r", getNodeSize)
+	    .attr("fill", getNodeColor)
+
+	var textElements = svg.append("g")
+	  .attr("class", "texts")
+	  .selectAll("text")
+	  .data(nodes)
+	  .enter().append("text")
+	    .text(function (data) { return  data.word })
+	    .attr("font-size", 15)
+	    .attr("dx", 15)
+	    .attr("dy", 4)
+
+	  simulation.nodes(data).on('tick', () => {
+	    nodeElements
+	      .attr('cx', function (data) { return data.x })
+	      .attr('cy', function (data) { return data.y })
+	    textElements
+	      .attr('x', function (data) { 
+	      	console.log('node.x' + data.word)
+	      	return data.x })
+	      .attr('y', function (data) { return data.word })
+	  })*/
+/*
+	  simulation.force('x', d3.forceX().x(function(data) {
+  		return xCenter[.group];
+	}))*/
+
+</script>
+
+<!-- <script src="https://d3js.org/d3.v4.min.js"></script> -->
+  <script src="../static/lib/js/jquery.min.js"></script>
+  <script src="../static/lib/js/bootstrap.min.js"></scripdata<script src="../static/lib/js/crossfilter.js"></script>
+  <script src="../static/lib/js/d3.js"></script>
+  <script src="../static/lib/js/dc.js"></script>
+  <script src="../static/lib/js/queue.js"></script>
+
+  
+  <script src="../static/lib/js/keen.min.js"></script>
+  <script src='../static/force.js' type='text/javascript'></script>
+  <script type="text/css" src="../static/css1.css"></script>
+
+{% endblock %}
+
+
+
+
+<!-- 
+
+
+[
+  {
+    "country": "Afghanistan",
+    "gdp": 18.4,
+    "continent": "Asia"
+  },
+  {
+    "country": "Belgium",
+    "gdp": 470.18,
+    "continent": "Europe"
+  },
+  {
+    "country": "Belize",
+    "gdp": 1.77,
+    "continent": "Americas"
+  },
+  {
+    "country": "Benin",
+    "gdp": 8.93,
+    "continent": "Africa"
+  },
+  {
+    "country": "Bhutan",
+    "gdp": 2.09,
+    "continent": "Asia"
+  },
+  {
+    "country": "Bolivia",
+    "gdp": 35.7,
+    "continent": "Americas"
+  },
+  {
+    "country": "Bosnia and Herzegovina",
+    "gdp": 16.53,
+    "continent": "Europe"
+  },
+  {
+    "country": "Botswana",
+    "gdp": 10.95,
+    "continent": "Africa"
+  },
+  {
+    "country": "Brazil",
+    "gdp": 1769.6,
+    "continent": "Americas"
+  },
+  {
+    "country": "Bulgaria",
+    "gdp": 50.45,
+    "continent": "Europe"
+  },
+  {
+    "country": "Burkina Faso",
+    "gdp": 12.01,
+    "continent": "Africa"
+  },
+  {
+    "country": "Burundi",
+    "gdp": 2.74,
+    "continent": "Africa"
+  },
+  {
+    "country": "Cabo Verde",
+    "gdp": 1.68,
+    "continent": "Africa"
+  },
+  {
+    "country": "Cambodia",
+    "gdp": 19.37,
+    "continent": "Asia"
+  },
+  {
+    "country": "Cameroon",
+    "gdp": 30.87,
+    "continent": "Africa"
+  },
+  {
+    "country": "Canada",
+    "gdp": 1532.34,
+    "continent": "Americas"
+  },
+  {
+    "country": "Denmark",
+    "gdp": 302.57,
+    "continent": "Europe"
+  },
+  {
+    "country": "Djibouti",
+    "gdp": 1.89,
+    "continent": "Africa"
+  },
+  {
+    "country": "Honduras",
+    "gdp": 20.93,
+    "continent": "Americas"
+  },
+  {
+    "country": "Hungary",
+    "gdp": 117.07,
+    "continent": "Europe"
+  },
+  {
+    "country": "Iceland",
+    "gdp": 19.44,
+    "continent": "Europe"
+  },
+  {
+    "country": "India",
+    "gdp": 2250.99,
+    "continent": "Asia"
+  },
+  {
+    "country": "Lebanon",
+    "gdp": 51.82,
+    "continent": "Asia"
+  },
+  {
+    "country": "Lesotho",
+    "gdp": 1.81,
+    "continent": "Africa"
+  },
+  {
+    "country": "Liberia",
+    "gdp": 2.17,
+    "continent": "Africa"
+  },
+  {
+    "country": "Libya",
+    "gdp": 39.39,
+    "continent": "Africa"
+  },
+  {
+    "country": "Lithuania",
+    "gdp": 42.78,
+    "continent": "Europe"
+  },
+  {
+    "country": "Luxembourg",
+    "gdp": 60.98,
+    "continent": "Europe"
+  },
+  {
+    "country": "Madagascar",
+    "gdp": 9.74,
+    "continent": "Africa"
+  },
+  {
+    "country": "Malawi",
+    "gdp": 5.47,
+    "continent": "Africa"
+  },
+  {
+    "country": "Malaysia",
+    "gdp": 302.75,
+    "continent": "Asia"
+  },
+  {
+    "country": "Maldives",
+    "gdp": 3.27,
+    "continent": "Asia"
+  },
+  {
+    "country": "Mali",
+    "gdp": 14.1,
+    "continent": "Africa"
+  },
+  {
+    "country": "Malta",
+    "gdp": 10.46,
+    "continent": "Europe"
+  },
+  {
+    "country": "Marshall Islands",
+    "gdp": 0.19,
+    "continent": "Oceania"
+  },
+  {
+    "country": "Mauritania",
+    "gdp": 4.72,
+    "continent": "Africa"
+  },
+  {
+    "country": "Mauritius",
+    "gdp": 11.74,
+    "continent": "Africa"
+  },
+  {
+    "country": "Mexico",
+    "gdp": 263.61,
+    "continent": "Americas"
+  },
+  {
+    "country": "Mongolia",
+    "gdp": 11.16,
+    "continent": "Asia"
+  },
+  {
+    "country": "Montenegro",
+    "gdp": 4.24,
+    "continent": "Europe"
+  },
+  {
+    "country": "Morocco",
+    "gdp": 104.91,
+    "continent": "Africa"
+  },
+  {
+    "country": "Mozambique",
+    "gdp": 12.05,
+    "continent": "Africa"
+  },
+  {
+    "country": "Myanmar",
+    "gdp": 68.28,
+    "continent": "Asia"
+  },
+  {
+    "country": "Namibia",
+    "gdp": 10.18,
+    "continent": "Africa"
+  },
+  {
+    "country": "Nepal",
+    "gdp": 21.15,
+    "continent": "Asia"
+  },
+  {
+    "country": "Netherlands",
+    "gdp": 769.93,
+    "continent": "Europe"
+  },
+  {
+    "country": "New Zealand",
+    "gdp": 179.36,
+    "continent": "Oceania"
+  },
+  {
+    "country": "Nicaragua",
+    "gdp": 13.41,
+    "continent": "Americas"
+  },
+  {
+    "country": "Niger",
+    "gdp": 7.57,
+    "continent": "Africa"
+  },
+  {
+    "country": "Nigeria",
+    "gdp": 415.08,
+    "continent": "Africa"
+  },
+  {
+    "country": "Norway",
+    "gdp": 376.27,
+    "continent": "Europe"
+  },
+  {
+    "country": "Oman",
+    "gdp": 59.68,
+    "continent": "Asia"
+  },
+  {
+    "country": "Palau",
+    "gdp": 0.3,
+    "continent": "Oceania"
+  },
+  {
+    "country": "Panama",
+    "gdp": 55.23,
+    "continent": "Americas"
+  },
+  {
+    "country": "Papua New Guinea",
+    "gdp": 19.92,
+    "continent": "Oceania"
+  },
+  {
+    "country": "Paraguay",
+    "gdp": 27.32,
+    "continent": "Americas"
+  },
+  {
+    "country": "Peru",
+    "gdp": 180.29,
+    "continent": "Americas"
+  },
+  {
+    "country": "Philippines",
+    "gdp": 311.69,
+    "continent": "Asia"
+  },
+  {
+    "country": "Poland",
+    "gdp": 467.35,
+    "continent": "Europe"
+  },
+  {
+    "country": "Portugal",
+    "gdp": 205.86,
+    "continent": "Europe"
+  },
+  {
+    "country": "Puerto Rico",
+    "gdp": 100.85,
+    "continent": "Americas"
+  },
+  {
+    "country": "Qatar",
+    "gdp": 156.6,
+    "continent": "Asia"
+  },
+  {
+    "country": "Romania",
+    "gdp": 186.51,
+    "continent": "Europe"
+  },
+  {
+    "country": "Russia",
+    "gdp": 1267.75,
+    "continent": "Europe"
+  },
+  {
+    "country": "Rwanda",
+    "gdp": 8.34,
+    "continent": "Africa"
+  },
+  {
+    "country": "Samoa",
+    "gdp": 0.88,
+    "continent": "Oceania"
+  },
+  {
+    "country": "San Marino",
+    "gdp": 1.56,
+    "continent": "Europe"
+  },
+  {
+    "country": "Saudi Arabia",
+    "gdp": 637.79,
+    "continent": "Asia"
+  },
+  {
+    "country": "Senegal",
+    "gdp": 14.87,
+    "continent": "Africa"
+  },
+  {
+    "country": "Seychelles",
+    "gdp": 1.42,
+    "continent": "Africa"
+  },
+  {
+    "country": "Sierra Leone",
+    "gdp": 4.29,
+    "continent": "Africa"
+  },
+  {
+    "country": "Singapore",
+    "gdp": 296.64,
+    "continent": "Asia"
+  },
+  {
+    "country": "Slovenia",
+    "gdp": 44.12,
+    "continent": "Europe"
+  },
+  {
+    "country": "Solomon Islands",
+    "gdp": 1.22,
+    "continent": "Oceania"
+  },
+  {
+    "country": "South Africa",
+    "gdp": 280.37,
+    "continent": "Africa"
+  }
+]
+
+    var width = window.innerWidth, height = window.innerHeight, sizeDivisor = 100, nodePadding = 2.5;
+
+    var svg = d3.select("body")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    var color = d3.scaleOrdinal(["#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3", "#a6d854", "#ffd92f", "#e5c494", "#b3b3b3"]);
+
+    var simulation = d3.forceSimulation()
+        .force("forceX", d3.forceX().strength(.1).x(width * .5))
+        .force("forceY", d3.forceY().strength(.1).y(height * .5))
+        .force("center", d3.forceCenter().x(width * .5).y(height * .5))
+        .force("charge", d3.forceManyBody().strength(-15));
+
+    d3.csv("data.csv", types, function(error,graph){
+      if (error) throw error;
+
+      // sort the nodes so that the bigger ones are at the back
+      graph = graph.sort(function(a,b){ return b.size - a.size; });
+
+      //update the simulation based on the data
+      simulation
+          .nodes(graph)
+          .force("collide", d3.forceCollide().strength(.5).radius(function(d){ return d.radius + nodePadding; }).iterations(1))
+          .on("tick", function(d){
+            node
+                .attr("cx", function(d){ return d.x; })
+                .attr("cy", function(d){ return d.y; })
+          });
+
+      var node = svg.append("g")
+          .attr("class", "node")
+        .selectAll("circle")
+        .data(graph)
+        .enter().append("circle")
+          .attr("r", function(d) { return d.radius; })
+          .attr("fill", function(d) { return color(d.continent); })
+          .attr("cx", function(d){ return d.x; })
+          .attr("cy", function(d){ return d.y; })
+          .call(d3.drag()
+              .on("start", dragstarted)
+              .on("drag", dragged)
+              .on("end", dragended));
+
+    });
+
+    function dragstarted(d) {
+      if (!d3.event.active) simulation.alphaTarget(.03).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+
+    function dragged(d) {
+      d.fx = d3.event.x;
+      d.fy = d3.event.y;
+    }
+
+    function dragended(d) {
+      if (!d3.event.active) simulation.alphaTarget(.03);
+      d.fx = null;
+      d.fy = null;
+    }
+
+    function types(d){
+      d.gdp = +d.gdp;
+      d.size = +d.gdp / sizeDivisor;
+      d.size < 3 ? d.radius = 3 : d.radius = d.size;
+      return d;
+    }
+
+ -->

@@ -1,0 +1,81 @@
+{% extends 'layout.html' %}
+<!-- 
+{%- block js -%}
+{{ super() }}
+<script type="text/javascript" src="{{ static('realTimeChartMulti.js') }}"></script>
+{%- endblock -%} -->
+{% block body %}
+<!-- 
+<meta http-equiv="refresh" content="10" />
+ -->
+<div class="container">
+  <h2> <br>  <br> Sentiment Analysis</h2>
+  <p><br><br>Sentiment analysis, also known as opinion mining is the process of determining the emotional tone behind a series of words, used to gain an understanding of the the attitudes, opinions and emotions expressed within an online mention.</p>
+  <div class="table-responsive">
+ <!--  <table class="table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Bad</th>
+        <th>Neutral</th>
+        <th>Good</th>
+        {{tweets}}
+      </tr>
+    </thead>
+  </table> -->
+
+  <div class="container-fluid">
+
+    <div class="row">
+
+      <div class="col-sm-6">
+        <div class="row">
+
+        <div class="col-sm-6">
+            <div class="chart-wrapper">
+                <div class="chart-title">
+                    Sentiment Score
+                </div>
+                <div class="chart-stage">
+                    <div id="funding-chart"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6">
+            <div class="chart-wrapper">
+                <div class="chart-title">
+                    Tweets per country
+                </div>
+                <div class="chart-stage">
+                    <div id="resource-type-row-chart"></div>
+                </div>
+            </div>
+        </div>
+
+          <div class="col-sm-6">
+            <div class="chart-wrapper">
+              {{ rows }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+     </div>
+  
+
+  </div>
+
+  <script src="../static/lib/js/jquery.min.js"></script>
+  <script src="../static/lib/js/bootstrap.min.js"></script>
+  <script src="../static/lib/js/crossfilter.js"></script>
+  <script src="../static/lib/js/d3.js"></script>
+  <script src="../static/lib/js/dc.js"></script>
+  <script src="../static/lib/js/queue.js"></script>
+
+  
+  <script src="../static/lib/js/keen.min.js"></script>
+  <script src='../static/graphs.js' type='text/javascript'></script>
+
+
+{% endblock %}

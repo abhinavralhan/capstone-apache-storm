@@ -1,0 +1,72 @@
+{% extends 'layout.html' %}
+<!-- 
+{%- block js -%}
+{{ super() }}
+<script type="text/javascript" src="{{ static('lib/js/datamaps.js') }}"></script>
+
+{%- endblock -%} -->
+{% block body %}
+<!-- <meta http-equiv="refresh" content="10" /> -->
+<div class="container">
+  <h2>Geolocation Analysis</h2>
+
+    
+ <!--           <script src="http://colorbrewer2.org/export/colorbrewer.js"></script>
+
+     <style type="text/css">
+       
+      
+
+        .d3-tip {
+                line-height: 1;
+                font-weight: bold;
+                padding: 12px;
+                background: black;
+                color: #fff;
+                border-radius: 2px;
+                opacity: 0.001%;
+              }
+              .d3-tip:after {
+                box-sizing: border-box;
+                display: inline;
+                font-size: 10px;
+                width: 100%;
+                line-height: 1;
+                color: black;
+                content: "\25BC";
+                position: absolute;
+                text-align: center;
+                opacity: 0.001%;
+              }
+
+              .d3-tip.n:after {
+                margin: -1px 0 0 0;
+                top: 100%;
+                left: 0;
+                opacity: 0.001%;
+              }
+              .area:hover {
+                fill: brown;
+              }
+              
+        </style>
+
+
+      <div id = "map" style = "float : left; min-width:320px;width :50%;height : 600px"> 
+        <div id="subtitle"></div>
+          </div>
+                
+ -->
+  <script src="../static/lib/js/jquery.min.js"></script>
+  <script src="../static/lib/js/bootstrap.min.js"></script>
+  <script src="../static/lib/js/crossfilter.js"></script>
+  <script src="../static/lib/js/d3.js"></script>
+  <script src="../static/lib/js/dc.js"></script>
+  <script src="../static/lib/js/queue.js"></script>
+  <script src="../static/lib/js/topojson.js"></script>
+  <script src="../static/lib/js/keen.min.js"></script>
+  <script src='../static/geo.js'></script>
+  <script src="../static/lib/js/d3tip.js"></script>
+  <script src="../static/lib/js/datamaps.js"></script>
+
+{% endblock %}
