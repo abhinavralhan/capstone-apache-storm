@@ -12,4 +12,4 @@ To create a jar with Dependencies for storm to execute :
 
 >  storm jar target/TwitterWork-0.0.1-SNAPSHOT-jar-with-dependencies.jar twtst.TwitterTopology
 
-> ![See here for live vizualization](https://twitter.com/i/status/994479691779067904)
+> ![See here for live vizualization](https://t.co/RAD9Lg4J5T)
